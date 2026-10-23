@@ -1,56 +1,40 @@
-# Welcome to your Expo app 👋
+# Touchie
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Anything you imagine, at your fingertips.
 
-## Get started
+Touchie is a mobile creation canvas. You describe a dashboard, a site, a quiz, a deck, or a moodboard. It builds a real, touchable project from one schema. You then drag, resize, circle a region, and ask for a change. There is no code editor.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run
 
 ```bash
-npm run reset-project
+npm install
+npm run typecheck
+npm run verify
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Open the iOS simulator, Android, or press `w` for the web preview. The first screen asks “What do you want to make?”
 
-### Other setup steps
+## What works without accounts
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The Touchie engine turns a prompt into a validated project on the phone. Filters, quiz scoring, page navigation, and circle-to-edit all run on that project. Nothing is stored off the device until you add the keys below.
 
-## Learn more
+## Keys
 
-To learn more about developing your project with Expo, look at the following resources:
+| Need | Variable | What it unlocks |
+| --- | --- | --- |
+| Cloud save | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Sync. Apply `supabase/schema.sql`, enable anonymous sign-in, and create a public `assets` bucket. |
+| Model generation | `OPENAI_API_KEY` | The server route `src/app/api/ai+api.ts` asks OpenAI for a project or a list of edits. The phone never sees the key. Invalid model output is rejected and the on-device engine is used. |
+| Share links | `EXPO_PUBLIC_SHARE_BASE_URL` | The public origin printed when you share. The shared page plays the saved snapshot. |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Payments, accounts inside a created website, and other outside services are not invented by the canvas. A creation can link out or keep a form on the device. Wiring those up takes a real backend.
 
-## Join the community
+## Demos
 
-Join our community of developers creating universal apps.
+The library starts with five creations on the same renderer:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Personal finance dashboard. Week, month, and all change the totals and the chart.
+2. Biology study guide with a scored quiz.
+3. Multi-page portfolio.
+4. Pitch deck.
+5. Apartment moodboard. Switch to Touch and drag the pictures, or Circle and say what should change.

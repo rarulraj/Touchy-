@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "touchie",
+    "name": "Touchie",
     "slug": "touchie",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "touchie",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F3EBDD",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -28,11 +29,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F3EBDD",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
