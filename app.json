@@ -9,7 +9,12 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#F3EBDD",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.rarulraj.touchy",
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Touchy listens when you tap the notch, so you can talk instead of type.",
+        "NSSpeechRecognitionUsageDescription": "Touchy turns what you say into the next step on screen."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +39,15 @@
           "imageWidth": 76
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-widgets",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Touchy listens when you tap the notch, so you can talk instead of type.",
+          "speechRecognitionPermission": "Touchy turns what you say into the next step on screen."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

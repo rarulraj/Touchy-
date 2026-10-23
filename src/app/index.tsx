@@ -1,9 +1,12 @@
+import { asksAboutScreen, homeGuide } from '@/ai/answer';
 import { DEMO_PROMPTS } from '@/ai/generate';
+import { say } from '@/island/presence';
 import { useLibrary } from '@/store/library';
 import { Notch } from '@/ui/Notch';
 import { colors } from '@/ui/Sheet';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { useVoice } from '@/voice/store';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -41,6 +44,8 @@ export default function HomeScreen() {
   const createFromPrompt = useLibrary((state) => state.createFromPrompt);
   const openBlank = useLibrary((state) => state.openBlank);
   const recent = order.map((id) => projects[id]).filter((project) => project != null).slice(0, 8);
+  const listening = useVoice((state) => state.listening);
+  const toggle = useVoice((state) => state.toggle);
 
   const make = async (value: string) => {
     const text = value.trim();
@@ -50,13 +55,31 @@ export default function HomeScreen() {
     setNote('Shaping it.');
     try {
       const project = await createFromPrompt(text);
-      setOpen(false);
-      router.push({ pathname: '/editor/[id]', params: { id: project.id } });
+      router.push({ pathname: '/editor/[id]', params: { id: project.id, talk: '1' } });
     } finally {
       setBusy(false);
       setNote('');
     }
   };
+  const makeRef = useRef(make);
+  makeRef.current = make;
+
+  useFocusEffect(
+    useCallback(() => {
+      useVoice.getState().setOnFinal((text) => {
+        setPrompt(text);
+        setOpen(true);
+        if (asksAboutScreen(text)) {
+          const guide = homeGuide();
+          setNote(guide);
+          say(guide);
+          return;
+        }
+        void makeRef.current(text);
+      });
+      return () => useVoice.getState().setOnFinal(null);
+    }, []),
+  );
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 28 }}>
@@ -65,16 +88,18 @@ export default function HomeScreen() {
           open={open || busy}
           face={busy ? 'work' : open ? 'listen' : 'idle'}
           seen="this phone"
-          line={busy ? note || 'Shaping it.' : 'Tell me what to make. I stay on the notch.'}
+          line={busy ? note || 'Shaping it.' : listening ? 'Listening.' : note || 'Tell me what to make. I stay on the real notch.'}
           detail="tap me"
           value={prompt}
           busy={busy}
-          placeholder="a budget, a brand site, a study guide"
+          listening={listening}
+          placeholder="a budget, a brand site, or just talk"
           onChangeText={setPrompt}
-          onPress={() => setOpen(true)}
-          onClose={() => {
-            if (!busy) setOpen(false);
+          onPress={() => {
+            setOpen(true);
+            void toggle();
           }}
+          onListen={() => void toggle()}
           onSend={() => void make(prompt)}
         />
         {!open && !busy ? (
@@ -84,7 +109,7 @@ export default function HomeScreen() {
         ) : null}
       </View>
       <Text style={styles.ask}>Imagine it.</Text>
-      <Text style={styles.dek}>Touchy lives on the notch. Tap it, tell it what you see, and it makes that on the phone.</Text>
+      <Text style={styles.dek}>Tap the notch and talk. Circle a piece and Touchy walks you through the next tap, out loud, and stays in the iPhone notch when you leave.</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {starters.map((item) => (
           <Pressable

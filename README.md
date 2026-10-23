@@ -13,7 +13,7 @@ npm run verify
 npx expo start
 ```
 
-Open the iOS simulator, Android, or press `w` for the web preview. Tap the notch. That is Touchy. Tell it what to make. Inside a creation, tap the notch again and it changes what it sees.
+Open the iOS simulator. Touchy starts a Live Activity, so it stays in the real notch after you leave the app. Tap listen and talk. Circle a piece and Touchy says the next tap.
 
 ## What works without accounts
 

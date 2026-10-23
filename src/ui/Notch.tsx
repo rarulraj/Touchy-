@@ -18,8 +18,9 @@ export function Notch({
   value,
   placeholder,
   busy,
+  listening,
   onPress,
-  onClose,
+  onListen,
   onChangeText,
   onSend,
 }: {
@@ -31,8 +32,9 @@ export function Notch({
   value?: string;
   placeholder?: string;
   busy?: boolean;
+  listening?: boolean;
   onPress?: () => void;
-  onClose?: () => void;
+  onListen?: () => void;
   onChangeText?: (value: string) => void;
   onSend?: () => void;
 }) {
@@ -46,16 +48,15 @@ export function Notch({
             {detail}
           </Text>
         ) : null}
-        {open ? (
-          <Pressable onPress={onClose} hitSlop={10} style={styles.closeHit}>
-            <Text style={styles.close}>close</Text>
-          </Pressable>
-        ) : null}
       </View>
       {open ? (
         <View style={styles.body}>
           <Text style={styles.seen}>sees {seen || 'this screen'}</Text>
-          {line ? <Text style={styles.line}>{line}</Text> : null}
+          {line ? (
+            <Text style={styles.line} numberOfLines={4}>
+              {line}
+            </Text>
+          ) : null}
           <View style={styles.talk}>
             <TextInput
               value={value}
@@ -63,10 +64,12 @@ export function Notch({
               placeholder={placeholder || 'tell touchy'}
               placeholderTextColor="#8A7B6E"
               style={styles.input}
-              autoFocus
               editable={!busy}
               onSubmitEditing={onSend}
             />
+            <Pressable style={[styles.go, listening && styles.listenOn]} onPress={onListen} disabled={busy}>
+              <Text style={styles.goText}>{listening ? 'hearing' : 'listen'}</Text>
+            </Pressable>
             <Pressable style={[styles.go, busy && styles.goOff]} onPress={onSend} disabled={busy}>
               <Text style={styles.goText}>{busy ? '…' : 'go'}</Text>
             </Pressable>
@@ -108,8 +111,6 @@ const styles = StyleSheet.create({
   face: { color: '#FFF9F2', fontSize: 13, fontFamily: 'Outfit_700Bold' },
   word: { fontFamily: 'Outfit_700Bold', color: '#FFF9F2', fontSize: 14, letterSpacing: 0.3 },
   detail: { flexShrink: 1, fontFamily: 'Outfit_500Medium', color: '#E7D9C6', fontSize: 13 },
-  closeHit: { marginLeft: 'auto' },
-  close: { fontFamily: 'Outfit_600SemiBold', color: '#FF4B3E', fontSize: 13 },
   body: { marginTop: 10, gap: 8 },
   seen: { fontFamily: 'Outfit_600SemiBold', color: '#FF4B3E', fontSize: 12, letterSpacing: 0.4 },
   line: { fontFamily: 'Outfit_500Medium', color: '#FFF9F2', fontSize: 15, lineHeight: 20 },
@@ -125,7 +126,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit_500Medium',
     fontSize: 15,
   },
-  go: { backgroundColor: '#FF4B3E', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
+  go: { backgroundColor: '#FF4B3E', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 },
+  listenOn: { backgroundColor: '#1C1714' },
   goOff: { opacity: 0.5 },
   goText: { color: '#FFF9F2', fontFamily: 'Outfit_700Bold' },
 });

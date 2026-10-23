@@ -2,6 +2,8 @@ import 'react-native-gesture-handler';
 
 import { colors } from '@/ui/Sheet';
 import { useLibrary } from '@/store/library';
+import { notchStillHere, say } from '@/island/presence';
+import { VoiceHost } from '@/voice/host';
 import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
 import { useFonts } from 'expo-font';
@@ -9,7 +11,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,6 +32,14 @@ export default function RootLayout() {
   }, [load]);
 
   useEffect(() => {
+    say('I am on the notch. Circle anything on this screen and I will walk you through the next tap.');
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'background') notchStillHere();
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
     if (loaded || error) void SplashScreen.hideAsync();
   }, [loaded, error]);
 
@@ -38,6 +48,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.stage}>
       <StatusBar style="dark" />
+      <VoiceHost />
       <View style={styles.device}>
         <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: colors.paper } }} />
       </View>

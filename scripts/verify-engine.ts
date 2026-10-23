@@ -1,3 +1,4 @@
+import { answerFor } from '../src/ai/answer';
 import { DEMO_PROMPTS, buildFromPrompt } from '../src/ai/generate';
 import { planEdits } from '../src/ai/edit';
 import { applyOperations } from '../src/ai/operations';
@@ -74,6 +75,10 @@ if (page && image) {
 
 const hostile = evaluate("calc('process.exit(1)')", { state: {}, data: {} });
 check('calc rejects code', hostile === 'error');
+
+const circled = finance.pages[0]?.nodeIds.slice(0, 2) ?? [];
+const spoken = answerFor(finance, runtime, circled);
+check('circle answer', spoken.length > 12 && !/tell me what should change/i.test(spoken), spoken);
 
 if (failures.length) {
   throw new Error(failures.join('\n'));

@@ -1,17 +1,20 @@
+import { answerFor } from '@/ai/answer';
 import { UniversalCanvas, type CanvasMode } from '@/canvas/UniversalCanvas';
 import { alignNodes } from '@/canvas/geometry';
 import { createRuntime, runActions } from '@/engine/actions';
+import { say } from '@/island/presence';
 import { endStroke, useLibrary } from '@/store/library';
 import { Notch } from '@/ui/Notch';
 import { Sheet, colors } from '@/ui/Sheet';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useVoice } from '@/voice/store';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Project, TouchNode } from '@/schema/types';
 
 export default function EditorScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, talk } = useLocalSearchParams<{ id: string; talk?: string }>();
   const projectId = String(id ?? '');
   const project = useLibrary((state) => state.projects[projectId]);
   const past = useLibrary((state) => state.past[projectId]?.length ?? 0);
@@ -24,17 +27,29 @@ export default function EditorScreen() {
   const publish = useLibrary((state) => state.publish);
   const adoptVariant = useLibrary((state) => state.adoptVariant);
   const insets = useSafeAreaInsets();
-  const [mode, setMode] = useState<CanvasMode>(project?.type === 'moodboard' || project?.type === 'diagram' || project?.type === 'graphic' ? 'edit' : 'play');
+  const [mode, setMode] = useState<CanvasMode>(talk === '1' ? 'circle' : project?.type === 'moodboard' || project?.type === 'diagram' || project?.type === 'graphic' ? 'edit' : 'play');
   const [pageId, setPageId] = useState(project?.pages[0]?.id ?? '');
   const [selected, setSelected] = useState<string[]>([]);
   const [runtime, setRuntime] = useState(() => (project ? createRuntime(project) : null));
   const [ask, setAsk] = useState('');
-  const [toast, setToast] = useState('');
-  const [talking, setTalking] = useState(false);
+  const [answer, setAnswer] = useState('');
+  const [notchOpen, setNotchOpen] = useState(true);
+  const [circling, setCircling] = useState(true);
   const [working, setWorking] = useState(false);
   const [sheet, setSheet] = useState<'input' | 'variants' | null>(null);
   const [variants, setVariants] = useState<Project[]>([]);
   const [inputId, setInputId] = useState<string | null>(null);
+  const listening = useVoice((state) => state.listening);
+  const toggle = useVoice((state) => state.toggle);
+  const spoken = useRef('');
+  const runAskRef = useRef<(text: string) => void>(() => undefined);
+
+  useFocusEffect(
+    useCallback(() => {
+      useVoice.getState().setOnFinal((text) => runAskRef.current(text));
+      return () => useVoice.getState().setOnFinal(null);
+    }, []),
+  );
 
   useEffect(() => {
     if (project && !runtime) {
@@ -43,6 +58,12 @@ export default function EditorScreen() {
       setPageId(next.pageId);
     }
   }, [project, runtime]);
+
+  useEffect(() => {
+    if (!answer || answer === spoken.current) return;
+    spoken.current = answer;
+    say(answer);
+  }, [answer]);
 
   useEffect(() => {
     if (!runtime?.link) return;
@@ -68,20 +89,26 @@ export default function EditorScreen() {
     const text = instruction.trim();
     if (!text) return;
     setAsk('');
-    setSheet(null);
+    setNotchOpen(true);
+    if (isQuestion(text) || !isEdit(text)) {
+      setAnswer(answerFor(project, activeRuntime, selected, text));
+      setCircling(true);
+      return;
+    }
     setWorking(true);
-    setTalking(true);
     try {
       const result = await editWithAI(project.id, text, selected);
-      setToast(result.summary);
+      setAnswer(result.summary);
       if (result.variants.length) {
         setVariants(result.variants);
         setSheet('variants');
       }
     } finally {
       setWorking(false);
-      setTalking(false);
     }
+  };
+  runAskRef.current = (text) => {
+    void runAsk(text);
   };
 
   const inputNode = inputId ? project.nodes[inputId] : undefined;
@@ -92,11 +119,13 @@ export default function EditorScreen() {
         project={project}
         page={page}
         runtime={activeRuntime}
-        mode={mode}
+        mode={circling ? 'circle' : mode}
         selectedIds={selected}
         onSelect={(ids) => {
           setSelected(ids);
-          if (mode === 'circle' && ids.length) setTalking(true);
+          if (!circling) return;
+          setNotchOpen(true);
+          setAnswer(ids.length ? answerFor(project, activeRuntime, ids) : 'Nothing in that circle. Draw around a piece.');
         }}
         onLiveFrames={(frames) => {
           live(project.id, (current) => {
@@ -127,7 +156,7 @@ export default function EditorScreen() {
           if (!interaction) return;
           const next = runActions(project, activeRuntime, interaction.actions);
           setRuntime(next);
-          if (next.message) setToast(next.message);
+          if (next.message) setAnswer(next.message);
         }}
       />
       <View style={[styles.top, { top: insets.top + 8 }]} pointerEvents="box-none">
@@ -144,38 +173,41 @@ export default function EditorScreen() {
       </View>
       <View style={[styles.islandFloat, { top: insets.top + 4 }]} pointerEvents="box-none">
         <Notch
-          open={talking || working}
-          face={working ? 'work' : talking ? 'listen' : toast ? 'done' : 'idle'}
-          seen={selected.length ? `${selected.length} circled on ${project.name}` : project.name}
-          line={working ? 'Changing what I see.' : talking ? 'Tell me what should change.' : toast || undefined}
-          detail={toast || project.name}
+          open={notchOpen || working}
+          face={working ? 'work' : listening ? 'listen' : answer ? 'done' : 'idle'}
+          seen={selected.length ? `${selected.length} circled on ${project.name}` : `all of ${project.name}`}
+          line={working ? 'Reading what you circled.' : listening ? 'Listening.' : answer || 'Circle anything on the screen. I will say the next tap, and I stay in the real notch if you leave.'}
+          detail={project.name}
           value={ask}
           busy={working}
-          placeholder={selected.length ? 'what should I change?' : 'make it quieter, add a page'}
+          listening={listening}
+          placeholder="ask about the circle, or tap listen"
           onChangeText={setAsk}
-          onPress={() => setTalking(true)}
-          onClose={() => {
-            if (!working) setTalking(false);
+          onPress={() => {
+            setNotchOpen(true);
+            setCircling(true);
+            void toggle();
           }}
+          onListen={() => void toggle()}
           onSend={() => void runAsk(ask)}
         />
       </View>
-      <ScrollView horizontal style={[styles.pages, { top: insets.top + 52 }]} contentContainerStyle={styles.pageRow} showsHorizontalScrollIndicator={false}>
+      <ScrollView horizontal style={[styles.pages, { top: insets.top + (notchOpen ? 188 : 52) }]} contentContainerStyle={styles.pageRow} showsHorizontalScrollIndicator={false}>
         {project.pages.map((item) => (
           <Pressable key={item.id} style={[styles.pageChip, item.id === page.id && styles.pageOn]} onPress={() => setRuntime({ ...activeRuntime, pageId: item.id })}>
             <Text style={[styles.pageText, item.id === page.id && styles.pageTextOn]}>{item.name}</Text>
           </Pressable>
         ))}
       </ScrollView>
-      {toast ? (
-        <Pressable style={[styles.toast, { top: insets.top + 96 }]} onPress={() => setToast('')}>
-          <Text style={styles.toastText}>{toast}</Text>
+      {answer && !notchOpen ? (
+        <Pressable style={[styles.toast, { top: insets.top + 96 }]} onPress={() => setAnswer('')}>
+          <Text style={styles.toastText}>{answer}</Text>
         </Pressable>
       ) : null}
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 10 }]}>
         {selected.length > 0 && mode !== 'play' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tools}>
-            <Tool label="Ask" onPress={() => setTalking(true)} />
+            <Tool label="Ask" onPress={() => { setNotchOpen(true); setCircling(true); setAnswer(answerFor(project, activeRuntime, selected)); }} />
             <Tool label="Duplicate" onPress={() => commit(project.id, (current) => duplicateSelected(current, page.id, selected), 'Duplicated')} />
             <Tool
               label="Align"
@@ -191,8 +223,20 @@ export default function EditorScreen() {
         ) : null}
         <View style={styles.modes}>
           {(['play', 'edit', 'circle'] as const).map((item) => (
-            <Pressable key={item} style={[styles.mode, mode === item && styles.modeOn]} onPress={() => setMode(item)}>
-              <Text style={[styles.modeText, mode === item && styles.modeTextOn]}>{item === 'edit' ? 'touch' : item}</Text>
+            <Pressable
+              key={item}
+              style={[styles.mode, (item === 'circle' ? circling : mode === item && !circling) && styles.modeOn]}
+              onPress={() => {
+                if (item === 'circle') {
+                  setCircling(true);
+                  setNotchOpen(true);
+                  return;
+                }
+                setCircling(false);
+                setMode(item);
+              }}
+            >
+              <Text style={[styles.modeText, (item === 'circle' ? circling : mode === item && !circling) && styles.modeTextOn]}>{item === 'edit' ? 'touch' : item}</Text>
             </Pressable>
           ))}
           <Pressable
@@ -237,6 +281,14 @@ function Tool({ label, onPress }: { label: string; onPress: () => void }) {
       <Text style={styles.toolText}>{label}</Text>
     </Pressable>
   );
+}
+
+function isQuestion(text: string): boolean {
+  return /\?$/.test(text.trim()) || /^(what|why|how|who|when|which|explain|tell me)\b/i.test(text.trim());
+}
+
+function isEdit(text: string): boolean {
+  return /\b(make|add|change|delete|remove|color|bigger|smaller|quieter|move|resize|chart|page|rename|duplicate)\b/i.test(text);
 }
 
 function duplicateSelected(project: Project, pageId: string, ids: string[]): Project {
