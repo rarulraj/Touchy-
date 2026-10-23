@@ -1,12 +1,13 @@
 import { useVoice } from '@/voice/store';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useEffect } from 'react';
 
 export function VoiceHost() {
   useEffect(() => {
+    if (!requireOptionalNativeModule('ExpoSpeechRecognition')) return;
     let cancelled = false;
     const subscriptions: { remove: () => void }[] = [];
-    void import('expo-speech-recognition')
-      .then((mod) => {
+    void import('expo-speech-recognition').then((mod) => {
         if (cancelled) return;
         const speech = mod.ExpoSpeechRecognitionModule;
         subscriptions.push(

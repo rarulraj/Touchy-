@@ -1,9 +1,11 @@
 import * as Speech from 'expo-speech';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
-import type { LiveActivity } from 'expo-widgets';
-import type { TouchyActivityProps } from '@/island/TouchyActivity';
 
-let activity: LiveActivity<TouchyActivityProps> | null = null;
+type IslandProps = { title: string; detail: string };
+type Island = { update: (props: IslandProps) => void };
+
+let activity: Island | null = null;
 let lastDetail = 'Circle the screen. I will walk you through the next tap.';
 
 export function say(text: string) {
@@ -27,6 +29,7 @@ export function notchStillHere() {
 }
 
 async function push(title: string, detail: string) {
+  if (!requireOptionalNativeModule('ExpoWidgets')) return;
   try {
     const { default: TouchyActivity } = await import('@/island/TouchyActivity');
     const props = { title, detail };
