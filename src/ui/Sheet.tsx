@@ -38,8 +38,8 @@ export function Sheet({
 }
 
 const styles = StyleSheet.create({
-  wrap: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(28,23,20,0.28)' },
+  wrap: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
+  scrim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(28,23,20,0.28)' },
   panel: {
     backgroundColor: colors.card,
     borderTopLeftRadius: 28,

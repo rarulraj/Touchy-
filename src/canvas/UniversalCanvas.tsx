@@ -241,12 +241,12 @@ export function UniversalCanvas({
 
   const scope = scopeFor(project, runtime);
   const skPath = useMemo(() => {
-    const path = Skia.Path.Make();
+    const path = Skia.PathBuilder.Make();
     lasso.forEach((point, index) => {
       if (index === 0) path.moveTo(point.x, point.y);
       else path.lineTo(point.x, point.y);
     });
-    return path;
+    return path.build();
   }, [lasso]);
 
   const selected = selectedIds.map((id) => project.nodes[id]).filter((node): node is TouchNode => Boolean(node));
