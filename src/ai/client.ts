@@ -16,7 +16,7 @@ export async function requestProject(prompt: string): Promise<{ project: Project
       };
     }
   }
-  return { project: buildFromPrompt(prompt), note: 'Generated with the Touchie engine.' };
+  return { project: buildFromPrompt(prompt), note: 'Generated with the Touchy engine.' };
 }
 
 export async function requestEdit(

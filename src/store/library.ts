@@ -7,7 +7,7 @@ import type { ChatMessage, Project, PublishedProject, VersionSnap } from '@/sche
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-const KEY = 'touchie.library.v1';
+const KEY = 'touchy.library.v1';
 
 interface Persisted {
   projects: Record<string, Project>;

@@ -228,7 +228,7 @@ function q(
 function starter(subject: string): StudyQuestion[] {
   const name = titleCase(subject || 'This idea');
   return [
-    q(`This guide is about which subject?`, 'subject', [['subject', name], ['other', 'A different topic'], ['blank', 'Nothing yet'], ['all', 'Every topic at once']], 'The subject', `This board starts as a scaffold about ${name}. Circle a card and tell Touchie the real outline.`, name),
+    q(`This guide is about which subject?`, 'subject', [['subject', name], ['other', 'A different topic'], ['blank', 'Nothing yet'], ['all', 'Every topic at once']], 'The subject', `This board starts as a scaffold about ${name}. Circle a card and tell Touchy the real outline.`, name),
     q('What should you do with a starter card?', 'rewrite', [['rewrite', 'Rewrite it in your words'], ['trust', 'Treat it as a textbook'], ['hide', 'Hide the whole guide'], ['skip', 'Skip thinking']], 'Make it yours', 'These cards are a starting structure, not a finished textbook.', 'Rewrite it.'),
     q('A good study pass includes which move?', 'recall', [['recall', 'Try to recall, then peek'], ['once', 'Read it once'], ['copy', 'Copy it without looking away'], ['rush', 'Rush the quiz first']], 'Recall', 'Reading is the start. Trying to answer before you peek is the part that sticks.', 'Answer, then peek.'),
     q('Where do you check these four ideas?', 'quiz', [['quiz', 'On the quiz page'], ['email', 'In an email'], ['map', 'On a map'], ['none', 'Nowhere']], 'The quiz', 'The quiz scores the answers that match these cards.', 'On the quiz page.'),

@@ -1,4 +1,5 @@
 import { useLibrary } from '@/store/library';
+import { Notch } from '@/ui/Notch';
 import { Sheet, colors } from '@/ui/Sheet';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -22,10 +23,11 @@ export default function LibraryScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
       <View style={styles.top}>
-        <Pressable onPress={() => router.back()}>
+        <Pressable style={styles.side} onPress={() => router.back()}>
           <Text style={styles.link}>Home</Text>
         </Pressable>
-        <Text style={styles.title}>Library</Text>
+        <Notch detail="library" />
+        <View style={styles.side} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}>
         {order.map((id) => {
@@ -40,7 +42,7 @@ export default function LibraryScreen() {
           );
         })}
       </ScrollView>
-      <Text style={styles.footer}>Projects stay on this device. Add Supabase keys to sync, and an OpenAI key on the server when you want the model instead of the Touchie engine.</Text>
+      <Text style={styles.footer}>Projects stay on this device. Add Supabase keys to sync, and an OpenAI key on the server when you want the model instead of the Touchy engine.</Text>
       {current ? (
         <Sheet title={current.name} onClose={() => setMenu(null)}>
           <TextInput value={name} onChangeText={setName} style={styles.input} />
@@ -69,8 +71,8 @@ export default function LibraryScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  top: { paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { fontFamily: 'Fraunces_700Bold', fontSize: 32, color: colors.ink },
+  top: { paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  side: { width: 64 },
   link: { fontFamily: 'Outfit_600SemiBold', color: colors.coral },
   card: { backgroundColor: colors.card, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.line },
   kind: { fontFamily: 'Outfit_600SemiBold', color: colors.coral, fontSize: 12 },

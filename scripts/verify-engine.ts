@@ -78,4 +78,4 @@ check('calc rejects code', hostile === 'error');
 if (failures.length) {
   throw new Error(failures.join('\n'));
 }
-console.log('Touchie engine ok');
+console.log('Touchy engine ok');

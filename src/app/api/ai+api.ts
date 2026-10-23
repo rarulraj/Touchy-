@@ -1,7 +1,7 @@
 import { validateOperations, validateProject } from '@/schema/validate';
 import type { Operation, Project } from '@/schema/types';
 
-const SYSTEM = `You are Touchie's creation engine. Return JSON only.
+const SYSTEM = `You are Touchy's creation engine. Return JSON only.
 Projects use pages, nodes, state, data, and theme. Nodes are text, image, shape, container, button, input, chart, table, nav, metric, swatch, or progress.
 Interactions are validated actions: navigate, set, setExpr, toggle, inc, calculate, filter, sort, submit, message, link.
 Never return JavaScript. For edits, return {"summary":"...","operations":[...]} using create_page, add_component, update_component, remove_component, move_component, resize_component, update_style, update_interaction, generate_image, set_state_default, set_type, update_data.

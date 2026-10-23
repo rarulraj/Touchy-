@@ -1,8 +1,8 @@
-# Touchie
+# Touchy
 
-Anything you imagine, at your fingertips.
+Imagine it. Touchy is already on the notch.
 
-Touchie is a mobile creation canvas. You describe a dashboard, a site, a quiz, a deck, or a moodboard. It builds a real, touchable project from one schema. You then drag, resize, circle a region, and ask for a change. There is no code editor.
+Touchy is the creative backbone for iOS. Same idea as [heyclicky](https://www.heyclicky.com) on a Mac: a buddy that lives with you, sees the screen, and you talk to it. On the phone, Touchy lives in the notch. Tap it, say what you see, and it makes a real project — a dashboard, a site, a quiz, a deck, a moodboard — from one schema. You then drag, resize, circle a region, and tell the notch what should change. There is no code editor.
 
 ## Run
 
@@ -13,11 +13,11 @@ npm run verify
 npx expo start
 ```
 
-Open the iOS simulator, Android, or press `w` for the web preview. The first screen asks “What do you want to make?”
+Open the iOS simulator, Android, or press `w` for the web preview. Tap the notch. That is Touchy. Tell it what to make. Inside a creation, tap the notch again and it changes what it sees.
 
 ## What works without accounts
 
-The Touchie engine turns a prompt into a validated project on the phone. Filters, quiz scoring, page navigation, and circle-to-edit all run on that project. Nothing is stored off the device until you add the keys below.
+The Touchy engine turns a prompt into a validated project on the phone. Filters, quiz scoring, page navigation, and circle-to-edit all run on that project. Nothing is stored off the device until you add the keys below.
 
 ## Keys
 

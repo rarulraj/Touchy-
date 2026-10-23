@@ -69,7 +69,7 @@ function buildPortfolio(intent: Intent): Project {
   d.put('about', 'text', box(20, 74, 300, 40), { text: 'About the studio', style: { color: theme.ink, fontSize: 30, font: 'display' } });
   d.put('about', 'image', box(20, 130, 320, 200), { src: PHOTOS.desk, style: { radius: 22 } });
   d.put('about', 'text', box(20, 348, 320, 120), {
-    text: `${name} is a two-person practice. We design the page, the object, and the sentence around it. This site is a Touchie creation: tap the nav, nothing here is a picture of a website.`,
+    text: `${name} is a two-person practice. We design the page, the object, and the sentence around it. This site is a Touchy creation: tap the nav, nothing here is a picture of a website.`,
     style: { color: theme.ink, fontSize: 16 },
   });
   d.put('about', 'button', box(20, 490, 160, 46), { ...inkButton(theme, 'Say hello'), interactions: press([{ type: 'navigate', pageId: 'visit' }]) });
@@ -85,7 +85,7 @@ function buildPortfolio(intent: Intent): Project {
     ]),
   });
   d.put('visit', 'text', box(20, 372, 320, 48), {
-    text: 'Thanks {{ state.person }}. This form stays on the phone — Touchie does not send mail unless you connect a service.',
+    text: 'Thanks {{ state.person }}. This form stays on the phone — Touchy does not send mail unless you connect a service.',
     visibleWhen: 'state.sent == true',
     style: { color: theme.good, fontSize: 15, fontWeight: '600' },
   });
@@ -248,7 +248,7 @@ export function buildGraphic(intent: Intent): Project {
   const theme = intent.theme;
   const page = d.page('poster', 'Poster', 360, 640, theme.ink);
   d.put(page.id, 'shape', box(180, -40, 240, 240), { shape: 'ellipse', style: { background: theme.accent } });
-  d.put(page.id, 'text', box(24, 180, 300, 28), { text: 'touchie', style: { color: theme.accent, fontSize: 14, fontWeight: '700', letterSpacing: 2 } });
+  d.put(page.id, 'text', box(24, 180, 300, 28), { text: 'touchy', style: { color: theme.accent, fontSize: 14, fontWeight: '700', letterSpacing: 2 } });
   d.put(page.id, 'text', box(24, 220, 310, 180), { text: intent.title, style: { color: '#FFF8F2', fontSize: 52, font: 'display' } });
   d.put(page.id, 'text', box(24, 430, 280, 70), { text: 'Made with your fingers. No files, no terminal.', style: { color: 'rgba(255,248,242,0.75)', fontSize: 18 } });
   return d.finish(`${intent.title} poster`, 'graphic');
@@ -495,7 +495,7 @@ export function blankProject(): Project {
     style: { color: intent.theme.ink, fontSize: 40, font: 'display' },
   });
   d.put(page.id, 'text', box(24, 130, 300, 60), {
-    text: 'Ask Touchie to add the first thing.',
+    text: 'Ask Touchy to add the first thing.',
     style: { color: intent.theme.muted, fontSize: 16 },
   });
   return d.finish('Untitled', 'graphic');

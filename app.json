@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Touchie",
-    "slug": "touchie",
+    "name": "Touchy",
+    "slug": "touchy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "touchie",
+    "scheme": "touchy",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F3EBDD",
     "ios": {

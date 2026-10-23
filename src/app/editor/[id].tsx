@@ -2,6 +2,7 @@ import { UniversalCanvas, type CanvasMode } from '@/canvas/UniversalCanvas';
 import { alignNodes } from '@/canvas/geometry';
 import { createRuntime, runActions } from '@/engine/actions';
 import { endStroke, useLibrary } from '@/store/library';
+import { Notch } from '@/ui/Notch';
 import { Sheet, colors } from '@/ui/Sheet';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -21,7 +22,6 @@ export default function EditorScreen() {
   const redo = useLibrary((state) => state.redo);
   const editWithAI = useLibrary((state) => state.editWithAI);
   const publish = useLibrary((state) => state.publish);
-  const rename = useLibrary((state) => state.rename);
   const adoptVariant = useLibrary((state) => state.adoptVariant);
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<CanvasMode>(project?.type === 'moodboard' || project?.type === 'diagram' || project?.type === 'graphic' ? 'edit' : 'play');
@@ -30,7 +30,9 @@ export default function EditorScreen() {
   const [runtime, setRuntime] = useState(() => (project ? createRuntime(project) : null));
   const [ask, setAsk] = useState('');
   const [toast, setToast] = useState('');
-  const [sheet, setSheet] = useState<'ask' | 'input' | 'variants' | null>(null);
+  const [talking, setTalking] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [sheet, setSheet] = useState<'input' | 'variants' | null>(null);
   const [variants, setVariants] = useState<Project[]>([]);
   const [inputId, setInputId] = useState<string | null>(null);
 
@@ -67,11 +69,18 @@ export default function EditorScreen() {
     if (!text) return;
     setAsk('');
     setSheet(null);
-    const result = await editWithAI(project.id, text, selected);
-    setToast(result.summary);
-    if (result.variants.length) {
-      setVariants(result.variants);
-      setSheet('variants');
+    setWorking(true);
+    setTalking(true);
+    try {
+      const result = await editWithAI(project.id, text, selected);
+      setToast(result.summary);
+      if (result.variants.length) {
+        setVariants(result.variants);
+        setSheet('variants');
+      }
+    } finally {
+      setWorking(false);
+      setTalking(false);
     }
   };
 
@@ -87,7 +96,7 @@ export default function EditorScreen() {
         selectedIds={selected}
         onSelect={(ids) => {
           setSelected(ids);
-          if (mode === 'circle' && ids.length) setSheet('ask');
+          if (mode === 'circle' && ids.length) setTalking(true);
         }}
         onLiveFrames={(frames) => {
           live(project.id, (current) => {
@@ -125,15 +134,31 @@ export default function EditorScreen() {
         <Pressable style={styles.pill} onPress={() => router.back()}>
           <Text style={styles.pillText}>Home</Text>
         </Pressable>
-        <Pressable style={styles.namePill} onPress={() => rename(project.id, project.name.endsWith(' copy') ? project.name : project.name)}>
-          <Text style={styles.name} numberOfLines={1}>{project.name}</Text>
-        </Pressable>
+        <View style={styles.notchSlot} />
         <Pressable style={styles.pill} onPress={() => undo(project.id)} disabled={!past}>
           <Text style={styles.pillText}>Undo</Text>
         </Pressable>
         <Pressable style={styles.pill} onPress={() => redo(project.id)} disabled={!future}>
           <Text style={styles.pillText}>Redo</Text>
         </Pressable>
+      </View>
+      <View style={[styles.islandFloat, { top: insets.top + 4 }]} pointerEvents="box-none">
+        <Notch
+          open={talking || working}
+          face={working ? 'work' : talking ? 'listen' : toast ? 'done' : 'idle'}
+          seen={selected.length ? `${selected.length} circled on ${project.name}` : project.name}
+          line={working ? 'Changing what I see.' : talking ? 'Tell me what should change.' : toast || undefined}
+          detail={toast || project.name}
+          value={ask}
+          busy={working}
+          placeholder={selected.length ? 'what should I change?' : 'make it quieter, add a page'}
+          onChangeText={setAsk}
+          onPress={() => setTalking(true)}
+          onClose={() => {
+            if (!working) setTalking(false);
+          }}
+          onSend={() => void runAsk(ask)}
+        />
       </View>
       <ScrollView horizontal style={[styles.pages, { top: insets.top + 52 }]} contentContainerStyle={styles.pageRow} showsHorizontalScrollIndicator={false}>
         {project.pages.map((item) => (
@@ -150,7 +175,7 @@ export default function EditorScreen() {
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 10 }]}>
         {selected.length > 0 && mode !== 'play' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tools}>
-            <Tool label="Ask" onPress={() => setSheet('ask')} />
+            <Tool label="Ask" onPress={() => setTalking(true)} />
             <Tool label="Duplicate" onPress={() => commit(project.id, (current) => duplicateSelected(current, page.id, selected), 'Duplicated')} />
             <Tool
               label="Align"
@@ -164,19 +189,6 @@ export default function EditorScreen() {
             <Tool label="Delete" onPress={() => { commit(project.id, (current) => removeNodes(current, selected), 'Deleted'); setSelected([]); }} />
           </ScrollView>
         ) : null}
-        <View style={styles.askRow}>
-          <TextInput
-            value={ask}
-            onChangeText={setAsk}
-            placeholder={selected.length ? 'What should I change?' : 'Make it quieter, add a page, try a bar chart'}
-            placeholderTextColor="#8A7B6E"
-            style={styles.askInput}
-            onSubmitEditing={() => void runAsk(ask)}
-          />
-          <Pressable style={styles.askSend} onPress={() => void runAsk(ask)}>
-            <Text style={styles.askSendText}>Ask</Text>
-          </Pressable>
-        </View>
         <View style={styles.modes}>
           {(['play', 'edit', 'circle'] as const).map((item) => (
             <Pressable key={item} style={[styles.mode, mode === item && styles.modeOn]} onPress={() => setMode(item)}>
@@ -196,15 +208,6 @@ export default function EditorScreen() {
           </Pressable>
         </View>
       </View>
-      {sheet === 'ask' ? (
-        <Sheet title="What should I change?" onClose={() => setSheet(null)}>
-          <Text style={styles.help}>{selected.length} piece{selected.length === 1 ? '' : 's'} circled.</Text>
-          <TextInput value={ask} onChangeText={setAsk} placeholder="Make this more colorful" placeholderTextColor="#8A7B6E" style={styles.sheetInput} />
-          <Pressable style={styles.primary} onPress={() => void runAsk(ask)}>
-            <Text style={styles.primaryText}>Change it</Text>
-          </Pressable>
-        </Sheet>
-      ) : null}
       {sheet === 'input' && inputNode?.bind ? (
         <Sheet title={inputNode.placeholder || 'Edit'} onClose={() => setSheet(null)}>
           <TextInput
@@ -291,8 +294,8 @@ const styles = StyleSheet.create({
   top: { position: 'absolute', left: 10, right: 10, flexDirection: 'row', gap: 6, alignItems: 'center' },
   pill: { backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 8 },
   pillText: { fontFamily: 'Outfit_600SemiBold', color: colors.ink, fontSize: 12 },
-  namePill: { flex: 1, backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
-  name: { fontFamily: 'Outfit_600SemiBold', color: colors.ink },
+  notchSlot: { flex: 1, alignItems: 'center' },
+  islandFloat: { position: 'absolute', left: 16, right: 16, zIndex: 30, alignItems: 'center' },
   pages: { position: 'absolute', left: 0, right: 0, maxHeight: 36 },
   pageRow: { paddingHorizontal: 12, gap: 6 },
   pageChip: { backgroundColor: 'rgba(255,249,242,0.9)', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },

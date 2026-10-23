@@ -1,9 +1,10 @@
 import { DEMO_PROMPTS } from '@/ai/generate';
 import { useLibrary } from '@/store/library';
+import { Notch } from '@/ui/Notch';
 import { colors } from '@/ui/Sheet';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const categories = [
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
   const order = useLibrary((state) => state.order);
   const projects = useLibrary((state) => state.projects);
@@ -44,9 +46,11 @@ export default function HomeScreen() {
     const text = value.trim();
     if (!text || busy) return;
     setBusy(true);
+    setOpen(true);
     setNote('Shaping it.');
     try {
       const project = await createFromPrompt(text);
+      setOpen(false);
       router.push({ pathname: '/editor/[id]', params: { id: project.id } });
     } finally {
       setBusy(false);
@@ -57,33 +61,40 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 28 }}>
       <View style={styles.top}>
-        <View style={styles.markRow}>
-          <View style={styles.mark} />
-          <Text style={styles.word}>touchie</Text>
-        </View>
-        <Pressable onPress={() => router.push('/library')}>
-          <Text style={styles.link}>Library</Text>
-        </Pressable>
-      </View>
-      <Text style={styles.ask}>What do you want to make?</Text>
-      <Text style={styles.dek}>Anything you imagine, at your fingertips. Circle it later and say what should change.</Text>
-      <View style={styles.prompt}>
-        <TextInput
+        <Notch
+          open={open || busy}
+          face={busy ? 'work' : open ? 'listen' : 'idle'}
+          seen="this phone"
+          line={busy ? note || 'Shaping it.' : 'Tell me what to make. I stay on the notch.'}
+          detail="tap me"
           value={prompt}
+          busy={busy}
+          placeholder="a budget, a brand site, a study guide"
           onChangeText={setPrompt}
-          placeholder="a budget tracker, a brand site, a study guide"
-          placeholderTextColor={colors.muted}
-          multiline
-          style={styles.input}
+          onPress={() => setOpen(true)}
+          onClose={() => {
+            if (!busy) setOpen(false);
+          }}
+          onSend={() => void make(prompt)}
         />
-        <Pressable style={[styles.send, busy && styles.sendOff]} onPress={() => void make(prompt)}>
-          <Text style={styles.sendText}>{busy ? '…' : 'Make'}</Text>
-        </Pressable>
+        {!open && !busy ? (
+          <Pressable style={styles.library} onPress={() => router.push('/library')}>
+            <Text style={styles.link}>Library</Text>
+          </Pressable>
+        ) : null}
       </View>
-      {note ? <Text style={styles.note}>{note}</Text> : null}
+      <Text style={styles.ask}>Imagine it.</Text>
+      <Text style={styles.dek}>Touchy lives on the notch. Tap it, tell it what you see, and it makes that on the phone.</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {starters.map((item) => (
-          <Pressable key={item} style={styles.chip} onPress={() => setPrompt(item)}>
+          <Pressable
+            key={item}
+            style={styles.chip}
+            onPress={() => {
+              setPrompt(item);
+              setOpen(true);
+            }}
+          >
             <Text style={styles.chipText}>{item.replace(/\.$/, '')}</Text>
           </Pressable>
         ))}
@@ -91,7 +102,14 @@ export default function HomeScreen() {
       <Text style={styles.section}>Start from a kind</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {categories.map(([type, label]) => (
-          <Pressable key={type} style={styles.cat} onPress={() => setPrompt(`Make a ${label.replace(/s$/, '')} about `)}>
+          <Pressable
+            key={type}
+            style={styles.cat}
+            onPress={() => {
+              setPrompt(`Make a ${label.replace(/s$/, '')} about `);
+              setOpen(true);
+            }}
+          >
             <Text style={styles.catText}>{label}</Text>
           </Pressable>
         ))}
@@ -128,18 +146,11 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  top: { paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  markRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mark: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.coral },
-  word: { fontFamily: 'Fraunces_700Bold', fontSize: 28, color: colors.ink },
+  top: { paddingHorizontal: 16, alignItems: 'center' },
+  library: { position: 'absolute', right: 16, top: 8 },
   link: { fontFamily: 'Outfit_600SemiBold', color: colors.coral, fontSize: 15 },
   ask: { fontFamily: 'Fraunces_700Bold', fontSize: 40, color: colors.ink, paddingHorizontal: 20, marginTop: 22, lineHeight: 44 },
   dek: { fontFamily: 'Outfit_400Regular', color: colors.muted, fontSize: 16, paddingHorizontal: 20, marginTop: 8, lineHeight: 22 },
-  prompt: { margin: 20, backgroundColor: colors.card, borderRadius: 24, padding: 14, minHeight: 120, borderWidth: 1, borderColor: colors.line },
-  input: { fontFamily: 'Outfit_500Medium', fontSize: 17, color: colors.ink, minHeight: 64 },
-  send: { alignSelf: 'flex-end', backgroundColor: colors.ink, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 10 },
-  sendOff: { opacity: 0.5 },
-  sendText: { color: colors.card, fontFamily: 'Outfit_700Bold' },
   note: { paddingHorizontal: 22, color: colors.muted, fontFamily: 'Outfit_500Medium' },
   row: { paddingHorizontal: 20, gap: 8 },
   chip: { backgroundColor: '#FFF', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, maxWidth: 240 },

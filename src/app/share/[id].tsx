@@ -50,7 +50,7 @@ export default function ShareScreen() {
         onActivate={activate}
       />
       <View style={styles.caption}>
-        <Text style={styles.captionText}>{project.name} · made with touchie</Text>
+        <Text style={styles.captionText}>{project.name} · made with touchy</Text>
       </View>
     </View>
   );

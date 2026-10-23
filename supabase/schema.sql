@@ -1,4 +1,4 @@
--- Touchie schema. The project document in `projects.schema` is the source of truth
+-- Touchy schema. The project document in `projects.schema` is the source of truth
 -- the canvas edits. Pages and components are also stored as rows for querying.
 -- Enable anonymous sign-in if you want the app to sync without a password.
 
